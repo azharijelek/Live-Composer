@@ -9,6 +9,105 @@
 	jQuery(document).on('DSLC_basic_module_extend', function(){
 
 		/**
+		 * Process settings tabs
+		 *
+		 * @param object
+		 * @return null
+		 */
+		DSLC.BasicModule.prototype.processSettingsTabs = function( propValues )
+		{
+			var self = this;
+
+			/// Move options to its own prop
+			if(this.settings.options){
+
+				this.moduleOptions = {};
+
+				this.settings.options.forEach(function(item_clone){
+
+					var item = _.extend({}, item_clone);
+					var section = '';
+					var tabId = '';
+
+					/// Fix option structure
+					if(item.type == 'checkbox'){
+
+						var temp = {};
+
+						for(var i = 0, max = item.choices.length; i < max; i++){
+
+							var tempChoice = item.choices[i];
+
+							temp[tempChoice.value] = tempChoice;
+						}
+
+						item.choices = temp;
+					}
+
+					self.moduleOptions[item.id] = _.extend({}, item);
+
+					if(propValues[item.id] != undefined){
+
+						self.values[item.id] = self.moduleOptions[item.id].value = propValues[item.id];
+					}
+
+					if(item.type == 'jsobj') return false;
+
+					/// Sections and tabs.
+					/// Need to calculate it now to increase settings tabs render speed
+					if(item.section && item.section != ''){
+						section = item.section;
+					}else{
+						section = 'functionality';
+					}
+
+					if(!item.tab || item.tab == ''){
+
+						if(section == 'functionality'){
+
+							if(!self.settingsTabs[section + '__general_functionality']){
+
+								self.settingsTabs[section + '__general_functionality'] = {
+									title: 'General'
+								};
+							}
+						}else{
+
+							if(!self.settingsTabs[section + '__general_styling']){
+
+								self.settingsTabs[section + '__general_styling'] = {
+									title: 'General'
+								};
+							}
+						}
+
+						item.section = section;
+						tabId = 'general_' + section;
+						item.tab = tabId;
+
+					}else{
+
+						tabId = item.tab.toLowerCase().replace(" ", "_");
+
+						if(!self.settingsTabs[section + "__" + tabId]){
+
+							self.settingsTabs[section + "__" + tabId] = {
+								title: item.tab
+							};
+						}
+					}
+
+					if(!Array.isArray(self.settingsTabs[section + "__" + tabId].elements)){
+
+						self.settingsTabs[section + "__" + tabId].elements = [];
+					}
+
+					self.settingsTabs[section + "__" + tabId].elements.push(item.id);
+				});
+			}
+		}
+
+		/**
 		 * Clears inset HTML from admin-typed content
 		 * @return {string}
 		 */
@@ -19,10 +118,13 @@
 			HTML.find(".dslca-editable-content").each(function()
 			{
 				jQuery(this)
-				.removeAttr('contenteditable')
 				.removeClass('dslca-editable-content')
 				.removeAttr('data-id')
 				.removeAttr('data-type')
+			});
+			HTML.find("[contenteditable]").each(function()
+			{
+				jQuery(this).removeAttr('contenteditable');
 			});
 
 			return HTML[0].outerHTML;
@@ -182,9 +284,80 @@
 		}
 
 		/**
-		 * Dummy afterRender function. Users can describe it in custom way.
+		 * Functions should be always fored after module rendered
 		 */
-		DSLC.BasicModule.prototype.afterRender = function(){}
+		DSLC.BasicModule.prototype.afterModuleRendered = function()
+		{
+			var self = this;
+
+			this.elem.data('module-instance', this);
+			this.recalcCentered(); /// Some magic done :)
+
+			this.elem.find("[contenteditable]").each(function()
+			{
+				var editor = new MediumEditor(this);
+			});
+
+			/// Cache preview system
+			this.elem.click( function()
+			{
+				if( self.cacheLoaded )
+				{
+					self.reloadModuleBody();
+					self.cacheLoaded = false;
+				}
+			});
+
+			this.afterRenderHook();
+		}
+
+		/**
+		 * Sets editable content
+		 *
+		 * @param {jQuery obj} editableField if need to, you can calculate value in reloaded method
+		 */
+		DSLC.BasicModule.prototype.setWYSIWIGValue = function( editableField )
+		{
+			var optionId = editableField.data('id');
+			var content = editableField.html();
+
+			module
+				.setOption(optId, content)
+				.reloadModuleBody()
+				.saveEdits();
+			return this;
+		}
+
+		/**
+		 * Sets editable content
+		 *
+		 * @param {DOM obj} editableField if need to, you can calculate value in reloaded method
+		 */
+		DSLC.BasicModule.prototype.setContentEditableValue = function( editableField )
+		{
+			[].forEach.call(editableField.querySelectorAll("p"), function( p )
+			{
+				if ( p.innerHTML == '<br>' )
+				{
+					p.innerHTML = '&nbsp;';
+				}
+			});
+
+			var optionId = jQuery(editableField).data('id');
+			var content = editableField.innerHTML;
+
+			this.setOption(optionId, content)
+				.getModuleBody();
+
+			this.saveEdits();
+
+			return this;
+		}
+
+		/**
+		 * Dummy afterRenderHook function. Users can describe it in custom way. Fires every time, when module renders.
+		 */
+		DSLC.BasicModule.prototype.afterRenderHook = function(){}
 
 		/**
 		 * Change options before render
@@ -412,7 +585,7 @@
 
 						var value = rules[rule];
 
-						if(value.trim() != '' && value.trim() != 'url(" ")'){
+						if( rule != '' && value.trim() != '' && value.trim() != 'url(" ")'){
 
 							css_output += rule + ' : ' + value + important_append + '; ';
 						}
@@ -599,7 +772,17 @@
 
 			if(this.values[optionId] != undefined){
 
-				return this.values[optionId];
+				if( Array.isArray( this.values[optionId] ) ){
+
+					return _.deepExtend( [], this.values[optionId] );
+
+				}else if( typeof this.values[optionId] == 'object' ){
+
+					return _.deepExtend( {}, this.values[optionId] );
+				}else{
+
+					return this.values[optionId];
+				}
 			}else{
 
 				return this.moduleOptions[optionId].std || false;
@@ -614,6 +797,16 @@
 		 */
 		DSLC.BasicModule.prototype.setOption = function(optionId, optionValue)
 		{
+			/// Incapsulation for optionValue
+			if( Array.isArray( optionValue ) ){
+
+				optionValue = _.deepExtend( [], optionValue );
+
+			}else if( typeof optionValue == 'object' ){
+
+				optionValue = _.deepExtend( {}, optionValue );
+			}
+
 			var self = this;
 			function fireEvent()
 			{

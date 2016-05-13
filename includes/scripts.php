@@ -133,8 +133,14 @@ function dslc_load_scripts() {
 		wp_enqueue_script( 'base64', DS_LIVE_COMPOSER_URL . 'js/libs/base64.js', array(), DS_LIVE_COMPOSER_VER );
 		wp_enqueue_script( 'modernizr', DS_LIVE_COMPOSER_URL . 'js/libs/modernizr-custom.js', array(), DS_LIVE_COMPOSER_VER );
 		wp_enqueue_script( 'toolbarmain-js', DS_LIVE_COMPOSER_URL . 'js/ToolbarMain.js', array( 'jquery', 'extend-js' ), DS_LIVE_COMPOSER_VER );
+		wp_enqueue_script( 'deep-extend-underscore', DS_LIVE_COMPOSER_URL . 'js/libs/deepExtend.js', array( 'jquery', 'extend-js' ), DS_LIVE_COMPOSER_VER );
 		wp_enqueue_script( 'options-field-extender', DS_LIVE_COMPOSER_URL . 'js/optionFieldUtils.js', array( 'jquery', 'extend-js' ), DS_LIVE_COMPOSER_VER );
 		wp_enqueue_script( 'modal-window', DS_LIVE_COMPOSER_URL . 'js/ModalWindow.js', array( 'jquery', 'extend-js' ), DS_LIVE_COMPOSER_VER );
+
+		/* Medium text editor */
+		wp_enqueue_script( 'medium-editor-js', '//cdn.jsdelivr.net/medium-editor/latest/js/medium-editor.min.js' );
+		wp_enqueue_style( 'medium-editor-style', '//cdn.jsdelivr.net/medium-editor/latest/css/medium-editor.min.css' );
+		wp_enqueue_style( 'medium-editor-theme', DS_LIVE_COMPOSER_URL . '/css/roman.css' );
 
 		if ( DS_LIVE_COMPOSER_LOAD_MINIFIED )
 			wp_enqueue_script( 'dslc-builder-main-js', DS_LIVE_COMPOSER_URL . 'js/builder.main.min.js', array( 'jquery' ), DS_LIVE_COMPOSER_VER );

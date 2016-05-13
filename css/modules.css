@@ -679,6 +679,10 @@
 			float: right;
 		}
 
+.dslc-info-box .dslc-info-box-image-alt a img {
+    display: inline-block;
+}
+
 /**
  * PARTNERS MODULE
  */
@@ -1869,9 +1873,12 @@
 	    left: 0;
 	}
 	.dslc-image img {
-		max-width: none;
+		max-width: 100%;
 		display: inline-block;
 		vertical-align: middle;
+	}
+	#dslc-content .dslc-image a img {
+		display: inline-block;
 	}
 
 /**
@@ -1953,8 +1960,13 @@
 				bottom: 0;
 			}
 
-		.dslc-accordion-content {
+		.dslc-accordion-item:only-of-type .dslca-delete-accordion-hook{
+			display: none;
+		}
+
+		.dslc-accordion-content-wrapper {
 			position: relative;
+			display: none;
 			border: 0 solid transparent;
 		}
 
@@ -1977,12 +1989,6 @@
 		margin-top: 10px;
 	}
 
-		.dslca-add-accordion-hook .dslca-icon {
-			position: absolute;
-			line-height: 1;
-			top: 5px;
-			right: 6px;
-		}
 
 	.dslca-accordion-action-hooks {
 		position: absolute;
@@ -2252,3 +2258,15 @@ body.dslc-res-phone .dslc-post-main-inner-link-cover {
 		display: inline-block;
 		border-style: solid;
 	}
+
+
+
+
+
+/** Common styles */
+.dslc-center-elem{
+	top: 50%;
+    left: 50%;
+    visibility: visible;
+    transform: translate(-50%, -50%);
+}
