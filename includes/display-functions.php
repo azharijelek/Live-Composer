@@ -861,7 +861,7 @@ function dslc_filter_content( $content )
 		$cache = DSLC_Main::getCurPageHTMLCache();
 
 		// If there is LC code to add to the content output
-		if ( $composer_code || $template_code ) {
+		if ( $composer_code || $template_code) {
 
 				// Turn the LC code into HTML code
 				$composer_content = do_shortcode( $composer_code );
@@ -959,14 +959,29 @@ function dslc_module_front( $atts, $settings_raw = null )
 
 		$module_instance = new $module_id( $settings, $atts );
 
+		$activeModules = $LC_Registry->get( 'activeModules' );
+
+		if ( ! $activeModules ) {
+
+			$activeModules = [];
+		}
+
+		$activeModules['a' . $settings['module_instance_id']] = $module_instance;
+
+		$LC_Registry->set( 'activeModules', $activeModules );
 
 		if ( DS_LIVE_COMPOSER_ACTIVE  && ! $LC_Registry->get( 'removeAdminElementsFromEditor' ) ) {
 
+			/// Returns in Editor mode
+
 			return $module_instance->renderEditModeModule();
-		}else{
+		} else {
+
+			/// If generating precache
 
 			ob_start();
 			$module_instance->output( [] );
+
 			// End output fetching
 			$output = ob_get_contents();
 			ob_end_clean();

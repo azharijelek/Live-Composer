@@ -156,7 +156,7 @@
 					var array = $(this).data('array') ? ' array="' + $(this).data('array') + '"' : '';
 					var wpquery = $(this).data('wpquery') ? ' wpquery="' + $(this).data('wpquery') + '"' : '';
 
-					$(this).before("[dslc-repeatable module_id='" + self.settings.id +
+					$(this).before("[dslc-repeatable module_instance_id='" + self.settings.module_instance_id +
 						 "'" + array + " " + wpquery + "]")
 						.after("[/dslc-repeatable]")
 						.removeAttr('data-wpquery')
@@ -165,7 +165,7 @@
 			});
 
 			//
-			HTML.find("[data-array-field]").each(function()
+			HTML.find("[data-array-field], [data-module-method], [data-wppost-field]").each(function()
 			{
 				var arField = $(this).data('array-field') ? ' array-field="' + $(this).data('array-field') + '"' : '';
 				var modMethod = $(this).data('module-method') ? ' module-method="' + $(this).data('module-method') + '"' : '';
@@ -177,7 +177,9 @@
 					.removeAttr('data-wppost-field');
 			});
 
-			return HTML[0].outerHTML;
+			var out = $("<div>").append(HTML);
+
+			return out[0].outerHTML;
 		}
 		/**
 		 * Recalculate icons and another centered stuff
@@ -371,8 +373,8 @@
 			var optionId = editableField.data('id');
 			var content = editableField.html();
 
-			module
-				.setOption(optId, content)
+			this
+				.setOption(optionId, content)
 				.reloadModuleBody()
 				.saveEdits();
 			return this;
