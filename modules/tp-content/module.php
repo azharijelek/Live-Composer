@@ -1,5 +1,11 @@
 <?php
+/**
+ * Content module class
+ */
 
+/**
+ * Class DSLC_TP_Content
+ */
 class DSLC_TP_Content extends DSLC_Module {
 
 	var $module_id;
@@ -7,19 +13,27 @@ class DSLC_TP_Content extends DSLC_Module {
 	var $module_icon;
 	var $module_category;
 
-	function __construct() {
+	/**
+	 * @inherited
+	 */
+	function __construct( $settings = [], $atts = [] ) {
 
+		$this->module_ver = 2;
 		$this->module_id = __CLASS__;
 		$this->module_title = __( 'The Content', 'live-composer-page-builder' );
 		$this->module_icon = 'font';
 		$this->module_category = 'single';
 
+		parent::__construct( $settings, $atts );
 	}
 
-	function options() {	
+	/**
+	 * @inherited
+	 */
+	function options() {
 
 		$dslc_options = array(
-			
+
 			array(
 				'label' => __( 'Show On', 'live-composer-page-builder' ),
 				'id' => 'css_show_on',
@@ -40,7 +54,7 @@ class DSLC_TP_Content extends DSLC_Module {
 					),
 				),
 			),
-			
+
 			/**
 			 * Styling Options
 			 */
@@ -4156,66 +4170,73 @@ class DSLC_TP_Content extends DSLC_Module {
 
 	}
 
-	function output( $options ) {
+	/**
+	 * @inherited
+	 */
+	function afterRegister() {
 
-		global $dslc_active;
-		
-		$post_id = $options['post_id'];
+		add_action( 'wp_enqueue_scripts', function(){
 
-		if ( is_singular() ) {
-			$post_id = get_the_ID();
+			global $LC_Registry;
+
+			if ( $LC_Registry->get( 'dslc_active' ) == true ) {
+
+				$path = explode( '/', __DIR__ );
+				$path = array_pop( $path );
+				wp_enqueue_script( 'js-tp-content-extender', DS_LIVE_COMPOSER_URL . '/modules/' . $path . '/editor-script.js', array( 'jquery' ) );
+			}
+		});
+	}
+
+	/**
+	 * Returns content.
+	 * @return  string
+	 */
+	function get_content () {
+
+		$post_id = get_the_ID();
+		$options = $this->getPropsValues();
+
+		ob_start();
+
+		// Output before content
+		do_action( 'dslc_content_module_before_content', $post_id, $options );
+
+		global $post;
+
+		$new_query = new WP_Query( ['post_page' => $post->ID] );
+
+		// Output content
+		if ( $new_query->have_posts() ) {
+
+			while( $new_query->have_posts() ) {
+
+				$new_query->the_post();
+				the_content();
+			}
 		}
 
-		$this->module_start( $options );
+		// Output after content
+		do_action( 'dslc_content_module_after_content', $post_id, $options );
 
-		/* Module output starts here */
-					
-			$content_post = get_post( $post_id );
-			$content = $content_post->post_content;
+		return ob_get_clean();
+	}
 
-			if ( get_post_type( $post_id ) == 'dslc_templates' ) {
-				$content = '<h1>This Is An Example Of A Heading 1</h1>
-<h2>This Is An Example Of A Heading 2</h2>
-<h3>This Is An Example Of A Heading 3</h3>
-<h4>This Is An Example Of A Heading 4</h4>
-<h5>This Is An Example Of A Heading 5</h5>
-<h6>This Is An Example Of A Heading 6</h6>
-<p>This is a paragraph. Consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-<ul>
-<li>Unordered List item</li>
-<li>Unordered List item</li>
-<li>Unordered List item</li>
-<li>Unordered List item</li>
-</ul>
-<ol>
-<li>Ordered List item</li>
-<li>Ordered List item</li>
-<li>Ordered List item</li>
-<li>Ordered List item</li>
-</ol>
-<blockquote>This is a blockquote. Consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</blockquote>';
-			}
+	/**
+	 * @inherited
+	 */
+	function output( $options = [] ) {
 
-			?><div class="dslc-tp-content"><?php
+		$this->module_start();
 
-				// Output before content
-				do_action( 'dslc_content_module_before_content', $post_id, $options );
-
-				// Output content
-				if ( is_singular() && get_post_type( $post_id ) != 'dslc_templates' ) {
-					the_content();
-				} else {
-					echo $content;
-				}
-
-				do_action( 'dslc_content_module_after_content', $post_id, $options );
-
-			?></div><?php
-
+		/* Module output stars here */
+		echo $this->renderModule();
 		/* Module output ends here */
 
-		$this->module_end( $options );
-
+		$this->module_end();
 	}
 
 }
+
+/// Register module
+( new DSLC_TP_Content )->register();

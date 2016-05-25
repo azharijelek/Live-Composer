@@ -1,5 +1,11 @@
 <?php
+/**
+ * Download Button module class
+ */
 
+/**
+ * Class DSLC_TP_Downloads_Button
+ */
 class DSLC_TP_Downloads_Button extends DSLC_Module {
 
 	var $module_id;
@@ -7,19 +13,48 @@ class DSLC_TP_Downloads_Button extends DSLC_Module {
 	var $module_icon;
 	var $module_category;
 
-	function __construct() {
+	/**
+	 * @inherited
+	 */
+	function __construct( $settings = [], $atts = [] ) {
 
-		$this->module_id = 'DSLC_TP_Downloads_Button';
+		$this->module_ver = 2;
+		$this->module_id = __CLASS__;
 		$this->module_title = __( 'Download Button', 'live-composer-page-builder' );
 		$this->module_icon = 'download-alt';
 		$this->module_category = 'single';
 
+		parent::__construct( $settings, $atts );
 	}
-	
-	function options() {	
+
+	/**
+	 * @inherited
+	 */
+	function afterRegister()
+	{
+		add_action( 'wp_enqueue_scripts', function(){
+
+			global $LC_Registry;
+
+			$path = explode( '/', __DIR__ );
+			$path = array_pop( $path );
+
+			if ( $LC_Registry->get( 'dslc_active' ) == true ) {
+
+				wp_enqueue_script( 'js-downloads-button-extender', DS_LIVE_COMPOSER_URL . '/modules/' . $path . '/editor-script.js', array( 'jquery' ) );
+			}
+
+			wp_enqueue_script( 'js-downloads-button-production', DS_LIVE_COMPOSER_URL . '/modules/' . $path . '/script.js', array( 'jquery' ) );
+		});
+	}
+
+	/**
+	 * @inherited
+	 */
+	function options() {
 
 		$dslc_options = array(
-			
+
 			array(
 				'label' => __( 'Show On', 'live-composer-page-builder' ),
 				'id' => 'css_show_on',
@@ -176,7 +211,7 @@ class DSLC_TP_Downloads_Button extends DSLC_Module {
 			),
 
 			/**
-			 * Typography	
+			 * Typography
 			 */
 
 			array(
@@ -239,7 +274,7 @@ class DSLC_TP_Downloads_Button extends DSLC_Module {
 				'section' => 'styling',
 				'tab' => __( 'typography', 'live-composer-page-builder' ),
 			),
-			
+
 			/**
 			 * Icon
 			 */
@@ -427,61 +462,52 @@ class DSLC_TP_Downloads_Button extends DSLC_Module {
 
 	}
 
-	function output( $options ) {
+	/**
+	 * Returns post ID.
+	 * @return  string
+	 */
+	function get_id () {
+		return get_the_ID();
+	}
 
-		global $dslc_active;
+	function render_download_button( $atts, $content ) {
 
-		if ( $dslc_active && is_user_logged_in() && current_user_can( DS_LIVE_COMPOSER_CAPABILITY ) )
-			$dslc_is_admin = true;
+		return DSLC_Main::dslc_do_shortcode( $content );
+	}
+
+	/**
+	 * Returns download link.
+	 * @return  string
+	 */
+	function get_download_link () {
+		$post_id = get_the_ID();
+
+		if ( get_post_meta( $post_id, 'dslc_download_file', true ) )
+			$download_link = wp_get_attachment_url( get_post_meta( $post_id, 'dslc_download_file', true ) );
+		elseif ( get_post_meta( $post_id, 'dslc_download_url', true ) )
+			$download_link = get_post_meta( $post_id, 'dslc_download_url', true );
 		else
-			$dslc_is_admin = false;
+			$download_link = false;
 
-		$this->module_start( $options );
+		return $download_link;
+	}
 
-		$show_fake = true;
+	/**
+	 * @inherited
+	 */
+	function output( $options = [] ) {
 
-		if ( is_singular() ) {
-			$post_id = get_the_ID();
-			$show_fake = false;
-			if ( get_post_type( $post_id ) == 'dslc_templates' ) {
-				$show_fake = true;
-			} else {
-				if ( get_post_meta( $post_id, 'dslc_download_file', true ) )
-					$download_link = wp_get_attachment_url( get_post_meta( $post_id, 'dslc_download_file', true ) );
-				elseif ( get_post_meta( $post_id, 'dslc_download_url', true ) )
-					$download_link = get_post_meta( $post_id, 'dslc_download_url', true );
-				else
-					$download_link = false;
-			}
-		}
+		$this->module_start();
 
-		/* Module output starts here */
-			
-			?>
-
-				<div class="dslc-tp-download-button">
-					<?php if ( $show_fake ) : ?>
-					<a href="#">
-					<?php else : ?>
-					<a target="_blank" class="dslc-download-count-hook" data-post-id="<?php echo $post_id; ?>" href="<?php echo $download_link; ?>">
-					<?php endif; ?>
-						<?php if ( isset( $options['button_icon_id'] ) && $options['button_icon_id'] != '' ) : ?>
-							<span class="dslc-icon dslc-icon-<?php echo $options['button_icon_id']; ?>"></span>
-						<?php endif; ?>
-						<?php if ( $dslc_is_admin ) : ?>
-							<span class="dslca-editable-content" data-id="button_text" data-type="simple" <?php if ( $dslc_is_admin ) echo 'contenteditable'; ?>><?php echo $options['button_text']; ?></span>
-						<?php else : ?>
-							<span><?php echo $options['button_text']; ?></span>
-						<?php endif; ?>
-					</a>
-				</div><!-- .dslc-download-button -->
-
-			<?php
-
+		/* Module output stars here */
+		echo $this->renderModule();
 		/* Module output ends here */
 
-		$this->module_end( $options );
+		$this->module_end();
 
 	}
 
 }
+
+/// Register module
+( new DSLC_TP_Downloads_Button )->register();
