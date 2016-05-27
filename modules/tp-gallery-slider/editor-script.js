@@ -1,5 +1,5 @@
 /**
- * Content js extender
+ * Gallery Slider js extender
  */
 
 'use strict'
@@ -8,9 +8,9 @@
 
 	jQuery(document).on('DSLC_extend_modules', function(){
 
-		var Content = DSLC.ModulesManager.AvailModules.DSLC_TP_Content;
+		var Gallery_Slider = DSLC.ModulesManager.AvailModules.DSLC_TP_Gallery_Slider;
 
-		Content.prototype.changeOptionsBeforeRender = function(options)
+		Gallery_Slider.prototype.changeOptionsBeforeRender = function(options)
 		{
 			var opt = options;
 

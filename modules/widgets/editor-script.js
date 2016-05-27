@@ -1,5 +1,5 @@
 /**
- * Downloads Button js extender
+ * Widgets js extender
  */
 
 'use strict'
@@ -8,9 +8,9 @@
 
 	jQuery(document).on('DSLC_extend_modules', function(){
 
-		var Excerpt = DSLC.ModulesManager.AvailModules.DSLC_TP_Excerpt;
+		var Widgets = DSLC.ModulesManager.AvailModules.DSLC_Widgets;
 
-		Excerpt.prototype.changeOptionsBeforeRender = function(options)
+		Widgets.prototype.changeOptionsBeforeRender = function(options)
 		{
 			var opt = options;
 
