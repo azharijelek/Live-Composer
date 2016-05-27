@@ -2228,6 +2228,10 @@ class DSLC_Posts extends DSLC_Module {
 		add_shortcode( 'dslc-posts-module-navigation', [__CLASS__, 'dslc_posts_module_nav'] );
 	}
 
+	/**
+	 * Returns filter HTML string
+	 * @return string
+	 */
 	function post_filter() {
 
 		global $LC_Registry;
@@ -2408,6 +2412,7 @@ class DSLC_Posts extends DSLC_Module {
 
 		// Author archive page
 		if ( is_author() && $options['query_alter'] == 'enabled' ) {
+
 			global $authordata;
 			$args['author__in'] = array( $authordata->data->ID );
 		}
@@ -2426,9 +2431,11 @@ class DSLC_Posts extends DSLC_Module {
 
 		// Do the query
 		if ( ( is_category() || is_tag() || is_tax() || is_search() || is_date() ) && $options['query_alter'] == 'enabled' ) {
+
 			global $wp_query;
 			$dslc_query = $wp_query;
 		} else {
+
 			$dslc_query = new WP_Query( $args );
 		}
 
