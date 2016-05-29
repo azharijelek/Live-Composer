@@ -147,28 +147,7 @@ class DSLC_Posts extends DSLC_Module {
 				'id' => 'posts_per_row',
 				'std' => '3',
 				'type' => 'select',
-				'choices' => array(
-					array(
-						'label' => '1',
-						'value' => '1',
-					),
-					array(
-						'label' => '2',
-						'value' => '2',
-					),
-					array(
-						'label' => '3',
-						'value' => '3',
-					),
-					array(
-						'label' => '4',
-						'value' => '4',
-					),
-					array(
-						'label' => '6',
-						'value' => '6',
-					),
-				)
+				'choices' => $this->shared_options('posts_per_row_choices')
 			),
 			array(
 				'label' => __( 'Order By', 'live-composer-page-builder' ),
@@ -2224,8 +2203,6 @@ class DSLC_Posts extends DSLC_Module {
 
 			wp_enqueue_script( 'js-posts-extender', DS_LIVE_COMPOSER_URL . '/modules/' . $path . '/script.js', array( 'jquery' ) );
 		});
-
-		add_shortcode( 'dslc-posts-module-navigation', [__CLASS__, 'dslc_posts_module_nav'] );
 	}
 
 	/**
@@ -2247,9 +2224,9 @@ class DSLC_Posts extends DSLC_Module {
 
 		if ( $dslc_query->have_posts() ) {
 
-			while ( $dslc_query->have_posts() ) { 
+			while ( $dslc_query->have_posts() ) {
 
-				$dslc_query->the_post(); 
+				$dslc_query->the_post();
 
 				$cats_count++;
 

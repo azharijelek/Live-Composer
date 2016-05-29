@@ -1,3 +1,220 @@
-<div class="dslc-notification dslc-red">
-	<?php _e( 'Module in the development', 'live-composer-page-builder' ) ?>
-</div>
+<% if(elements.value.indexOf('main_heading') > -1 || show_filters || show_carousel_arrows){%>
+	<div class="dslc-module-heading">
+
+		<!-- Heading -->
+
+		<% if(elements.value.indexOf('main_heading') > -1){%>
+			<h2 class="dslca-editable-content" data-id="main_heading_title" data-type="simple" contenteditable>
+				<%= main_heading_title.value || main_heading_title.std %>
+			</h2>
+			<!-- View all -->
+
+			<% if(obj.view_all_link && view_all_link.value !== ''){%>
+
+				<span class="dslc-module-heading-view-all">
+					<a href="<%= view_all_link.value %>" class="dslca-editable-content" data-id="main_heading_link_title" data-type="simple" contenteditable >
+						<%= main_heading_link_title.value || main_heading_link_title.std %>
+					</a>
+				</span>
+			<%}%>
+		<%}%>
+
+
+		<% if(show_filters == true){%>
+			<!-- Filters -->
+			<div class="dslc-post-filters">
+
+				<span class="dslc-post-filter dslc-projects-module" data-id="all">
+					<?php _ex( 'All', 'Post Filter', 'live-composer-page-builder' ); ?>
+				</span>
+
+				<% cats_array.forEach(function(elem, index){%>
+					<span class="dslc-post-filter dslc-inactive" data-repeatable="post_filter" data-id="<%= elem.cat_slug %>">
+						<%= elem.cat_name %>
+					</span>
+				<%})%>
+
+			</div><!-- .dslc-post-filters -->
+		<%}%>
+
+		<!-- Carousel -->
+
+		<% if(show_carousel_arrows){%>
+			<span class="dslc-carousel-nav fr">
+				<span class="dslc-carousel-nav-inner">
+					<a href="#" class="dslc-carousel-nav-prev"><span class="dslc-icon-chevron-left dslc-init-center"></span></a>
+					<a href="#" class="dslc-carousel-nav-next"><span class="dslc-icon-chevron-right dslc-init-center"></span></a>
+				</span>
+			</span><!-- .carousel-nav -->
+		<%}%>
+	</div><!-- .dslc-module-heading -->
+<%}%>
+
+<div class="<%= container_class %>">
+		<div class="dslc-posts-inner">
+
+			<% if ( obj.type.value == 'carousel' ){%>
+
+				<div class="dslc-loader"></div>
+				<div class="dslc-carousel" data-stop-on-hover="<%= carousel_autoplay_hover.value %>" data-autoplay="<%= carousel_autoplay.value %>" data-columns="<%= carousel_items.value %>" data-pagination="<%= carousel_elements.value.circles == true ? 'true' : 'false' %>" data-slide-speed="<%= arrows_slide_speed.value %>" data-pagination-speed="<%= circles_slide_speed.value %>">
+			<%}%>
+
+			<% posts.forEach(function(elem, index){
+
+				var last_col = type.value == 'grid' && index > 0 && (index + 1) % posts_per_row.value == 0 && separator_enabled.value != 'disabled' ? 'dslc-last-col' : '';
+				%>
+				<div class="<%= element_class + columns_class + extra_class %> <%= last_col %> {{dslc-module-sc module-method='extra_col_class'}} {{dslc-module-sc module-method='project_categories'}}" data-repeatable="render_projects">
+
+					<% if(post_elements.value.indexOf('thumbnail') > -1){%>
+
+						<div class="dslc-post-thumb dslc-project-thumb dslc-on-hover-anim" data-module-method="post_thumb">
+
+							<div class="dslc-project-thumb-inner dslca-post-thumb">
+
+									<a href="#">
+										<img width="100%" height=200 src="http://dummyimage.com/300x200/000/fff"/>
+									</a>
+							</div><!-- .dslc-project-thumb-inner -->
+
+							<% if((main_location.value == 'inside' || main_location.value == 'inside_visible')  &&
+									(
+									 	post_elements.value.indexOf('title') > -1 ||
+									  	post_elements.value.indexOf('categories') > -1 ||
+									  	post_elements.value.indexOf('excerpt') > -1 ||
+									  	post_elements.value.indexOf('button') > -1
+									)
+								){%>
+
+								<div class="dslc-project-main <%= main_location.value == 'inside_visible' ? 'dslc-project-main-visible' : '' %> dslc-on-hover-anim-target dslc-anim-<%= css_anim_hover.value %>" data-dslc-anim="<%= css_anim_hover.value %>" data-dslc-anim-speed="<%= css_anim_speed.value %>">
+
+									<div class="dslc-project-main-inner dslc-init-<%= main_position.value %>">
+
+										<% if(post_elements.value.indexOf('title') > -1){%>
+
+											<div class="dslc-project-title">
+												<h2>
+													<a href="{{dslc-module-sc module-method='project_url'}}" data-module-method="post_title">Post title</a>
+												</h2>
+											</div><!-- .dslc-project-title -->
+
+										<%}%>
+
+										<% if(post_elements.value.indexOf('categories') > -1){%>
+
+											<div class="dslc-project-cats" module-method="project_cats_list" >
+													SEO, MMM, E-commerce, logistics
+											</div><!-- .dslc-project-cats -->
+										<%}%>
+
+										<% if(post_elements.value.indexOf('excerpt') > -1){%>
+
+											<div class="dslc-project-excerpt" data-module-method="excerpt">
+												Lorem ipsum dorem sit amet
+											</div><!-- .dslc-project-excerpt -->
+
+										<%}%>
+
+										<% if(post_elements.value.indexOf('button') > -1){%>
+
+											<div class="dslc-project-read-more">
+												<a href="{{dslc-module-sc module-method='project_url'}}" target="{{dslc-module-sc module-method='project_link_target'}}">
+
+													<% if(obj.button_icon_id && obj.button_icon_id.value != '' ){%>
+														<span class="dslc-icon dslc-icon-<%= button_icon_id.value %>"></span>
+													<%}%>
+
+													<%= button_text.value || button_text.std %>
+												</a>
+											</div><!-- .dslc-project-read-more -->
+										<%}%>
+
+									</div><!-- .dslc-init-center -->
+
+									<a href="{{dslc-module-sc module-method='project_url'}}" target="{{dslc-module-sc module-method='project_link_target'}}" class="dslc-post-main-inner-link-cover"></a>
+
+								</div><!-- .dslc-project-main -->
+							<%}%>
+						</div><!-- .dslc-project-thumb -->
+					<%}%>
+
+					<% if(main_location.value == 'bellow' && (post_elements.value.indexOf('title') > -1 || post_elements.value.indexOf('categories') > -1 || post_elements.value.indexOf('excerpt') > -1 || post_elements.value.indexOf('button') > -1)){%>
+
+						<div class="dslc-post-main dslc-project-main">
+
+							<% if(post_elements.value.indexOf('title') > -1){%>
+
+								<div class="dslc-project-title">
+									<h2>
+										<a href="{{dslc-module-sc module-method='project_url'}}" target="{{dslc-module-sc module-method='project_link_target'}}" data-module-method="post_title">Title</a>
+									</h2>
+								</div><!-- .dslc-project-title -->
+							<%}%>
+
+							<% if(post_elements.value.indexOf('categories') > -1){%>
+
+								<div class="dslc-project-cats" data-module-method="project_cats_list" >
+										SEO, MMM, E-commerce, logistics
+								</div><!-- .dslc-project-cats -->
+							<%}%>
+
+							<% if(post_elements.value.indexOf('excerpt') > -1){%>
+
+								<div class="dslc-project-excerpt" data-module-method="excerpt">
+									Lorem ipsum dorem sit amet
+								</div><!-- .dslc-project-excerpt -->
+							<%}%>
+
+							<% if(post_elements.value.indexOf('button') > -1){%>
+
+								<div class="dslc-project-read-more">
+									<a href="{{dslc-module-sc module-method='project_url'}}" target="{{dslc-module-sc module-method='project_link_target'}}">
+
+										<% if(obj.button_icon_id && obj.button_icon_id.value != '' ){%>
+											<span class="dslc-icon dslc-icon-<%= button_icon_id.value %>"></span>
+										<%}%>
+
+										<%= button_text.value || button_text.std %>
+									</a>
+								</div><!-- .dslc-project-read-more -->
+							<%}%>
+						</div><!-- .dslc-project-main -->
+					<%}%>
+					<!-- .dslc-project -->
+				</div>
+
+				<% if(last_col != ''){%>
+					<div class="dslc-post-separator lc-editor-element"></div>
+				<%}%>
+			<%});%>
+
+			<% if(type.value == 'carousel'){%>
+				</div>
+			<%}%>
+		</div><!--.dslc-posts-inner -->
+	</div><!-- .dslc-projects -->
+
+<% if(pagination_type.value && pagination_type.value != 'disabled'){%>
+	<div data-module-method="pagination_nav"></div>
+
+	<div class="dslc-pagination dslc-pagination-type-<%= pagination_type.value %> lc-editor-element">
+		<ul class="dslc-clearfix">
+			<% if(pagination_type.value == 'numbered'){%>
+				<li class="dslc-active"><a href="#">1</a></li>
+				<li class="dslc-inactive"><a class="inactive" href="#">2</a></li>
+			<%}%>
+
+			<% if(pagination_type.value == 'prevnext'){%>
+				<li class="dslc-active dslc-fr"><a href="#">Older</a></li>
+				<li class="dslc-inactive dslc-fl"><a href="#" class="">Newer</a></li>
+			<%}%>
+
+			<% if(pagination_type.value == 'loadmore'){%>
+				<li class="dslc-pagination-load-more dslc-active">
+					<a href="#">
+						<span class="dslc-icon dslc-icon-refresh"></span>LOAD MORE ITEMS
+					</a>
+				</li>
+			<%}%>
+		</ul>
+	</div>
+<%}%>

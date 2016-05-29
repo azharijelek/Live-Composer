@@ -137,7 +137,7 @@ class DSLC_Staff extends DSLC_Module {
 			),
 			array(
 				'label' => __( 'Items Per Row', 'live-composer-page-builder' ),
-				'id' => 'columns',
+				'id' => 'posts_per_row',
 				'std' => '3',
 				'type' => 'select',
 				'choices' => $this->shared_options('posts_per_row_choices'),
@@ -1867,6 +1867,505 @@ class DSLC_Staff extends DSLC_Module {
 
 	}
 
+	/**
+	 * @inherited
+	 */
+	function afterRegister() {
+
+		add_action( 'wp_enqueue_scripts', function(){
+
+			global $LC_Registry;
+
+			$path = explode( '/', __DIR__ );
+			$path = array_pop( $path );
+
+			if ( $LC_Registry->get( 'dslc_active' ) == true ) {
+
+				wp_enqueue_script( 'js-staff-editor-extender', DS_LIVE_COMPOSER_URL . '/modules/' . $path . '/editor-script.js', array( 'jquery' ) );
+			}
+
+			wp_enqueue_script( 'js-staff-extender', DS_LIVE_COMPOSER_URL . '/modules/' . $path . '/script.js', array( 'jquery' ) );
+		});
+	}
+
+	/**
+	 * Returns filter HTML string
+	 * @return string
+	 */
+	function staff_filter() {
+
+		global $LC_Registry;
+
+		$dslc_query = $this->get_staff();
+		$LC_Registry->set( 'dslc-staff-query', $dslc_query );
+
+		$taxonomy_name = '';
+
+		$cats_array = array();
+
+		$cats_count = 0;
+
+		if ( $dslc_query->have_posts() ) {
+
+			while ( $dslc_query->have_posts() ) {
+
+				$dslc_query->the_post();
+
+				$cats_count++;
+
+				$post_cats = get_the_terms( get_the_ID(), 'dslc_staff_cats' );
+
+				if ( ! empty( $post_cats ) ) {
+
+					foreach( $post_cats as $post_cat ) {
+
+						$cats_array[$post_cat->slug] = $post_cat->name;
+					}
+				}
+			}
+		}
+
+		ob_start();
+
+		foreach ( $cats_array as $cat_slug => $cat_name ) {?>
+			<span class="dslc-post-filter dslc-staff-module dslc-inactive" data-id="<?php echo $cat_slug; ?>"><?php echo $cat_name; ?></span>
+		<?php }
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Return categories data to each post. Template function.
+	 * @return string
+	 */
+	function staff_categories() {
+
+		$project_cats = get_the_terms( get_the_ID(), 'dslc_staff_cats' );
+
+		$project_cats_data = '';
+
+		if ( ! empty( $project_cats ) ) {
+
+			foreach( $project_cats as $project_cat ) {
+
+				$project_cats_data .= $project_cat->slug . ' ';
+			}
+		}
+
+		return $project_cats_data . ' in-cat-all';
+	}
+
+	/**
+	 * Staff fetcher.
+	 * @return WP_Query
+	 */
+	function get_staff() {
+
+		$options = $this->getPropsValues();
+
+		if ( ! isset( $options['excerpt_length'] ) ) $options['excerpt_length'] = 20;
+
+		if( is_front_page() ) { $paged = ( get_query_var( 'page' ) ) ? get_query_var( 'page' ) : 1; } else { $paged = ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1; }
+
+		// Fix for pagination from other modules affecting this one when pag disabled
+		if ( $options['pagination_type'] == 'disabled' ) $paged = 1;
+
+		// Fix for offset braking pagination
+		$query_offset = $options['offset'];
+		if ( $query_offset > 0 && $paged > 1 ) $query_offset = ( $paged - 1 ) * $options['amount'] + $options['offset'];
+
+		$args = array(
+			'paged' => $paged,
+			'post_type' => 'dslc_staff',
+			'posts_per_page' => $options['amount'],
+			'order' => $options['order'],
+			'orderby' => $options['orderby'],
+		);
+
+		// Add offset
+		if ( $query_offset > 0 ) {
+			$args['offset'] = $query_offset;
+		}
+
+		if ( defined('DOING_AJAX') && DOING_AJAX ) {
+			$args['post_status'] = array( 'publish', 'private' );
+		}
+
+		if ( isset( $options['categories'] ) && $options['categories'] != '' ) {
+
+			$cats_array = explode( ' ', trim( $options['categories'] ));
+
+			$args['tax_query'] = array(
+				array(
+					'taxonomy' => 'dslc_staff_cats',
+					'field' => 'slug',
+					'terms' => $cats_array,
+					'operator' => $options['categories_operator']
+				)
+			);
+
+		}
+
+		// Exlcude and Include arrays
+		$exclude = array();
+		$include = array();
+
+		// Exclude current post
+		if ( is_singular( get_post_type() ) )
+			$exclude[] = get_the_ID();
+
+		// Exclude posts ( option )
+		if ( $options['query_post_not_in'] )
+			$exclude = array_merge( $exclude, explode( ' ', $options['query_post_not_in'] ) );
+
+		// Include posts ( option )
+		if ( $options['query_post_in'] )
+			$include = array_merge( $include, explode( ' ', $options['query_post_in'] ) );
+
+		// Include query parameter
+		if ( ! empty( $include ) )
+			$args['post__in'] = $include;
+
+		// Exclude query parameter
+		if ( ! empty( $exclude ) )
+			$args['post__not_in'] = $exclude;
+
+		// No paging
+		if ( $options['pagination_type'] == 'disabled' )
+			$args['no_found_rows'] = true;
+
+		// Do the query
+		if ( is_category() || is_tax() || is_search() ) {
+			global $wp_query;
+			$dslc_query = $wp_query;
+		} else {
+			$dslc_query = new WP_Query( $args );
+		}
+
+		return $dslc_query;
+	}
+
+
+	/**
+	 * Staff render. Template function.
+	 *
+	 * @param  array $atts
+	 * @param  array $content
+	 *
+	 * @return string
+	 */
+	function render_staff( $atts, $content ) {
+
+		global $LC_Registry;
+
+		$out = '';
+		$dslc_query = $LC_Registry->get( 'dslc-staff-query' );
+
+		if ( $dslc_query == null ) {
+
+			$dslc_query = $this->get_staff();
+			$LC_Registry->set( 'dslc-staff-query', $dslc_query );
+		}
+
+		if ( $dslc_query->have_posts() ) {
+
+			$LC_Registry->set( 'curr_class', $this );
+
+			$options = $this->getPropsValues();
+			$cnt = 0;
+
+			while ( $dslc_query->have_posts() ) {
+
+				$dslc_query->the_post();
+				$LC_Registry->set( 'dslc-staff-elem-index', $cnt );
+
+				$staff_member_info = [];
+				$staff_member_info['twitter'] = get_post_meta( get_the_ID(), 'dslc_staff_social_twitter', true );
+				$staff_member_info['facebook'] = get_post_meta( get_the_ID(), 'dslc_staff_social_facebook', true );
+				$staff_member_info['googleplus'] = get_post_meta( get_the_ID(), 'dslc_staff_social_googleplus', true );
+				$staff_member_info['linkedin'] = get_post_meta( get_the_ID(), 'dslc_staff_social_linkedin', true );
+				$staff_member_info['email'] = get_post_meta( get_the_ID(), 'dslc_staff_social_email', true );
+				$staff_member_info['position'] = get_post_meta( get_the_ID(), 'dslc_staff_position', true );
+
+				$LC_Registry->set( 'dslc-staff-member-info', $staff_member_info );
+
+				$out .= DSLC_Main::dslc_do_shortcode( $content );
+
+				if ( 	$options['type'] == 'grid' &&
+				 		$cnt > 0 &&
+				 		($cnt + 1) % $options['posts_per_row'] == 0 &&
+				 		$options['separator_enabled'] != 'disabled' &&
+				 		($cnt + 1) < $dslc_query->found_posts &&
+				 		($cnt + 1) < $dslc_query->query_vars['posts_per_page']
+				 	) {
+
+					$out .= '<div class="dslc-post-separator"></div>';
+				}
+
+				$cnt++;
+			}
+
+			unset( $cnt );
+
+			$LC_Registry->set( 'dslc-staff-elem-index', null );
+			$LC_Registry->set( 'curr_class', null );
+			$LC_Registry->set( 'dslc-staff-member-social', null );
+		}
+
+		return $out;
+	}
+
+
+	/**
+	 * Return current member position. Template function
+	 * @return string
+	 */
+	function position() {
+
+		global $LC_Registry;
+		$staff_member_info = $LC_Registry->get( 'dslc-staff-member-info' );
+
+		return $staff_member_info['position'];
+	}
+
+	/**
+	 * Returns staff social info.
+	 * @return string
+	 */
+	function member_social() {
+
+		global $LC_Registry;
+		ob_start();
+
+		$options = $this->getPropsValues();
+		$member_social = $LC_Registry->get( 'dslc-staff-member-info' );
+
+		if ( isset( $member_social['twitter'] ) || isset( $member_social['facebook'] ) || isset( $member_social['googleplus'] ) || isset( $member_social['linkedin'] ) || isset( $member_social['email'] ) ){?>
+
+			<div class="dslc-staff-member-social">
+
+				<?php if ( isset( $member_social['twitter'] ) ) : ?>
+					<a target="<?php echo $options['social_link_target']; ?>" href="<?php echo $member_social['twitter']; ?>">
+						<span class="dslc-icon dslc-icon-twitter"></span>
+					</a>
+				<?php endif; ?>
+
+				<?php if ( isset( $member_social['facebook'] ) ) : ?>
+					<a target="<?php echo $options['social_link_target']; ?>" href="<?php echo $member_social['facebook']; ?>">
+						<span class="dslc-icon dslc-icon-facebook"></span>
+					</a>
+				<?php endif; ?>
+
+				<?php if ( isset( $member_social['googleplus'] ) ) : ?>
+					<a target="<?php echo $options['social_link_target']; ?>" href="<?php echo $member_social['googleplus']; ?>">
+						<span class="dslc-icon dslc-icon-google-plus"></span>
+					</a>
+				<?php endif; ?>
+
+				<?php if ( isset( $member_social['linkedin'] ) ) : ?>
+					<a target="<?php echo $options['social_link_target']; ?>" href="<?php echo $member_social['linkedin']; ?>">
+						<span class="dslc-icon dslc-icon-linkedin"></span>
+					</a>
+				<?php endif; ?>
+
+				<?php if ( isset( $member_social['email'] ) ) : ?>
+					<a target="<?php echo $options['social_link_target']; ?>" href="<?php echo $member_social['email']; ?>">
+						<span class="dslc-icon dslc-icon-envelope"></span>
+					</a>
+				<?php endif; ?>
+
+			</div><!-- .dslc-staff-member-social -->
+		<?php };
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Returns last col class
+	 * @return string
+	 */
+	function extra_col_class() {
+
+		global $LC_Registry;
+
+		$opts = $this->getPropsValues();
+		$index = $LC_Registry->get( 'dslc-staff-elem-index' );
+		$extra_class = '';
+
+		if ( $opts['type'] == 'grid' && $index > 0 && ($index + 1) % $opts['posts_per_row'] == 0 && $opts['separator_enabled'] != 'disabled' ) {
+
+			$extra_class = 'dslc-last-col ';
+		}
+
+		if ( ! has_post_thumbnail() ) {
+
+			$extra_class .= 'dslc-post-no-thumb';
+		}
+
+		return $extra_class;
+	}
+
+	/**
+	 * Returns permalink. Repeater function.
+	 * @return  string
+	 */
+	function permalink() {
+
+		global $post;
+
+		return get_post_permalink( $post->ID );
+	}
+
+	/**
+	 * Returns excerpt or content. Repeater function.
+	 * @return string
+	 */
+	function excerpt() {
+
+		$options = $this->getPropsValues();
+
+		ob_start();
+		if ( $options['excerpt_or_content'] == 'content' ) {
+
+			the_content();
+		} else {
+
+			if ( $options['excerpt_length'] > 0 ) {
+				if ( has_excerpt() )
+					echo do_shortcode( wp_trim_words( get_the_excerpt(), $options['excerpt_length'] ) );
+				else
+					echo do_shortcode( wp_trim_words( get_the_content(), $options['excerpt_length'] ) );
+			} else {
+				if ( has_excerpt() )
+					echo do_shortcode( get_the_excerpt() );
+				else
+					echo do_shortcode( get_the_content() );
+			}
+		}
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Returns author's post link. Repeater function.
+	 * @return string
+	 */
+	function author_posts_link() {
+
+		ob_start();
+		echo get_the_author_posts_link();
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Returns post date. Repeater function.
+	 * @return  string
+	 */
+	function post_date() {
+
+		ob_start();
+		the_time( get_option( 'date_format' ) );
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Returns post title.Repeater function.
+	 * @return string
+	 */
+	function post_title() {
+
+		ob_start();
+		the_title();
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Returns post thumbnail. Repeater function.
+	 * @return  string
+	 */
+	function post_thumb() {
+
+		if ( ! has_post_thumbnail() ) return '';
+
+		$manual_resize = false;
+		$options = $this->getPropsValues();
+
+		if ( isset( $options['thumb_resize_height'] ) && ! empty( $options['thumb_resize_height'] ) || isset( $options['thumb_resize_width_manual'] ) && ! empty( $options['thumb_resize_width_manual'] ) ) {
+
+			$manual_resize = true;
+			$thumb_url = wp_get_attachment_image_src( get_post_thumbnail_id(), 'full' );
+			$thumb_url = $thumb_url[0];
+
+			$thumb_alt = get_post_meta( get_post_thumbnail_id(), '_wp_attachment_image_alt', true );
+			if ( ! $thumb_alt ) $thumb_alt = '';
+
+			$resize_width = false;
+			$resize_height = false;
+
+			if ( isset( $options['thumb_resize_width_manual'] ) && ! empty( $options['thumb_resize_width_manual'] ) ) {
+				$resize_width = $options['thumb_resize_width_manual'];
+			}
+
+			if ( isset( $options['thumb_resize_height'] ) && ! empty( $options['thumb_resize_height'] ) ) {
+				$resize_height = $options['thumb_resize_height'];
+			}
+		}
+
+		ob_start();
+
+		if ( $options['link'] != 'disabled' ) {
+		?>
+				<a href="<?php the_permalink() ?>">
+		<?php }
+
+			 if ( $manual_resize ) {?>
+				<img src="<?php $res_img = dslc_aq_resize( $thumb_url, $resize_width, $resize_height, true ); echo $res_img; ?>" alt="<?php echo $thumb_alt; ?>" />
+			<?php } else { ?>
+				<?php the_post_thumbnail( 'full' ); ?>
+			<?php }
+
+		if ( $options['link'] != 'disabled' ) {
+		?>
+			</a>
+		<?php }
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Returns navigation HTML. Template shortcode function
+	 * @param  array $atts
+	 * @return string
+	 */
+	function pagination_nav( $atts ) {
+
+		global $LC_Registry;
+
+		$options = $this->getPropsValues();
+		$dslc_query = $LC_Registry->get( 'dslc-staff-query' );
+
+		ob_start();
+
+		if ( isset( $options['pagination_type'] ) && $options['pagination_type'] != 'disabled' ) {
+
+			$num_pages = $dslc_query->max_num_pages;
+
+			if ( $options['offset'] > 0 ) {
+				$num_pages = ceil ( ( $dslc_query->found_posts - $options['offset '] ) / $options['amount'] );
+			}
+
+			dslc_post_pagination( array( 'pages' => $num_pages, 'type' => $options['pagination_type'] ) );
+		}
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * @inherited
+	 */
 	function output( $options = [] ) {
 
 		$this->module_start();
@@ -1876,7 +2375,6 @@ class DSLC_Staff extends DSLC_Module {
 		/* Module output ends here */
 
 		$this->module_end();
-
 	}
 
 }
