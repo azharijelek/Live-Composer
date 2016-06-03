@@ -1,5 +1,5 @@
 /**
- * Posts js extender
+ * Woo commerce js extender
  */
 
 'use strict'
@@ -8,9 +8,9 @@
 
 	jQuery(document).on('DSLC_extend_modules', function(){
 
-		var Posts = DSLC.ModulesManager.AvailModules.DSLC_Posts;
+		var Woocomm = DSLC.ModulesManager.AvailModules.DSLC_WooCommerce_Products;
 
-		Posts.prototype.changeOptionsBeforeRender = function(options)
+		Woocomm.prototype.changeOptionsBeforeRender = function(options)
 		{
 			var opt = options;
 			/**
@@ -87,8 +87,7 @@
 			 */
 
 			// Posts container
-			opt.container_class = 'dslc-posts dslc-cpt-posts dslc-clearfix dslc-cpt-posts-type-' +
-				opt.type.value + ' dslc-posts-orientation-' + opt.orientation.value + ' ';
+			opt.container_class = 'dslc-posts dslc-products dslc-clearfix dslc-products-type-' + type.value + ' dslc-posts-orientation-' + orientation.value + ' ';
 
 			if(opt.type.value == 'masonry'){
 
@@ -99,7 +98,7 @@
 			}
 
 			// Post
-			opt.element_class = 'dslc-post dslc-cpt-post ';
+			opt.element_class = 'dslc-post dslc-product ';
 
 			if(opt.type.value == 'masonry'){
 

@@ -1,5 +1,5 @@
 /**
- * Projects production scripts
+ * Testimonials production scripts
  */
 
 'use strict'
@@ -10,7 +10,7 @@
 	 * Filter
 	 */
 
-	jQuery(document).on('click', '.dslc-post-filter.dslc-projects-module', function($){
+	jQuery(document).on('click', '.dslc-post-filter.dslc-testim-module', function($){
 
 		$ = jQuery;
 		// Get info
@@ -42,6 +42,8 @@
 			dslcFilterPosts.addClass('dslc-masonry-item dslc-masonry-item-animate').css({ visibility : 'visible' }).show();
 
 			dslc_masonry(dslcWrapper, true);
+
 		}
+
 	});
 }());
