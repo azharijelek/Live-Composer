@@ -915,10 +915,13 @@ function load_modules( $dir_path, $init_filename = '' )
 {
 	$directories = glob( $dir_path . '/*', GLOB_ONLYDIR );
 	foreach( $directories as $dir ) {
+
 		$plugin_file_name = explode( '/', $dir );
-		$init_filename = ( $init_filename != '' ) ? $init_filename : array_pop( $plugin_file_name ) . '.php';
-		$widgetpath = $dir . '/' . $init_filename;
+		$filename = ( $init_filename != '' ) ? $init_filename : array_pop( $plugin_file_name ) . '.php';
+		$widgetpath = $dir . '/' . $filename;
+
 		if ( file_exists( $widgetpath ) ) {
+
 			require_once $widgetpath;
 		}
 	}
