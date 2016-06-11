@@ -407,8 +407,7 @@ var dslcDebug = false;
 							dslc_center();
 							dslc_generate_code();
 							dslc_show_publish_button();
-
-							DSLC.Editor.dslc_init_medium_editor();
+							dslc_init_medium_editor();
 						});
 
 					});
@@ -4234,7 +4233,7 @@ var dslcDebug = false;
 				dslc_init_accordion();
 				dslc_init_square();
 				dslc_center();
-				DSLC.Editor.dslc_init_medium_editor();
+				dslc_init_medium_editor();
 
 				if ( callback ) {
 					callback( response );
@@ -4526,8 +4525,9 @@ var dslcDebug = false;
 
 			dslc_module_options_confirm_changes(function(){
 
-				DSLC.Editor.dslc_init_medium_editor();
+				dslc_init_medium_editor();
 			});
+
 			$('.dslca-options-filter-hook.dslca-active').removeClass('dslca-active');
 			dslc_responsive_classes( true );
 
@@ -4981,6 +4981,20 @@ var dslcDebug = false;
 
 		);
 
+	}
+
+	/**
+	 * Init medium editor for contenteditable fields
+	 */
+	function dslc_init_medium_editor(){
+
+		jQuery(".dslca-editable-content[contenteditable]").each(function(){
+
+			if(jQuery(this).data('medium-editor-element') == null){
+
+				var medium = new MediumEditor(this);
+			}
+		});
 	}
 
 	/**
@@ -5827,7 +5841,7 @@ var dslcDebug = false;
 		// Editable Content
 
 		/// init Medium inline editor
-		DSLC.Editor.dslc_init_medium_editor();
+		dslc_init_medium_editor();
 
 		jQuery(document).on('blur', '.dslca-editable-content', function() {
 

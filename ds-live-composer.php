@@ -80,17 +80,80 @@
 	include DS_LIVE_COMPOSER_ABS . '/includes/post-templates.php';
 	include DS_LIVE_COMPOSER_ABS . '/includes/other.php';
 	include DS_LIVE_COMPOSER_ABS . '/includes/options.extension.class.php';
-	include DS_LIVE_COMPOSER_ABS . '/includes/main.class.php';
+
+	function wp_loaded()
+	{
+		global $LC_Registry;
+
+		if ( ! is_user_logged_in() && $LC_Registry->get( 'dslc_active' ) == true ) {
+
+			wp_redirect( "Location: //" . $_SERVER['REDIRECT_URL'], 301 );
+			die();
+		}
+	}
+
+
+	/**
+	 * Tutorials disabled by default
+	 *
+	 * Use the next call to activate tutorilas form your theme
+	 * add_filter( 'dslc_tutorials', '__return_true' );
+	 *
+	 * @since 1.0.7
+	 */
+	function dslc_tutorials_load() {
+
+		$dslc_tutorials = false;
+
+		if ( apply_filters( 'dslc_tutorials', $dslc_tutorials ) ) {
+
+			include DS_LIVE_COMPOSER_ABS . '/includes/tutorials/tutorial.php';
+		}
+	}
+	add_action( 'after_setup_theme', 'dslc_tutorials_load' );
+
+	function dslc_welcome() {
+
+		// Make Welcome screen optional for the theme developers
+		$show_welcome_screen = true;
+
+	   	if ( apply_filters( 'dslc_show_welcome_screen', $show_welcome_screen ) ) {
+
+	   		return;
+	   	}
+
+		// Bail if no activation redirect
+		if ( ! get_transient( '_dslc_activation_redirect_1' ) ) {
+
+			return;
+		}
+
+		// Delete the redirect transient
+		delete_transient( '_dslc_activation_redirect_1' );
+
+		// Bail if activating from network, or bulk
+		if ( is_network_admin() || isset( $_GET['activate-multi'] ) ) {
+
+			return;
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=dslc_getting_started' ) ); 
+		exit;
+	}
+	add_action( 'admin_init', 'dslc_welcome' );
 
 	$cap_page = dslc_get_option( 'lc_min_capability_page', 'dslc_plugin_options_access_control' );
 	if ( ! $cap_page ) $cap_page = 'publish_posts';
 	define( 'DS_LIVE_COMPOSER_CAPABILITY', $cap_page );
 	define( 'DS_LIVE_COMPOSER_CAPABILITY_SAVE', $cap_page );
 
+	function dslc_on_activation()
+	{
+		set_transient('_dslc_activation_redirect_1', true, 60);
+	}
 	/**
 	 * Include Modules
 	 */
-
 	include DS_LIVE_COMPOSER_ABS . '/includes/class.module.php';
 	load_modules( DS_LIVE_COMPOSER_ABS . "/modules", "module.php" );
 
