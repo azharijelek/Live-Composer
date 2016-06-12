@@ -151,9 +151,12 @@ var commonVars = DSLC.commonVars; /// Just alias
 
 	/**
 	 * Copies module from current module
+	 *
+	 * @return Module class
 	 */
-	DSLC.ModulesManager.copyModule = function( moduleInstance )
+	DSLC.ModulesManager.copyModule = function( moduleInstance, insertIntoDOM )
 	{
+		insertIntoDOM = insertIntoDOM || function(){};
 		var moduleSettings = JSON.parse(
 		    Util.b64_to_utf8(
 				moduleInstance.getEncodedSettings()
@@ -168,7 +171,9 @@ var commonVars = DSLC.commonVars; /// Just alias
 		var moduleElem = newModule.renderModule();
 
 		DSLC.ModulesManager.ActiveModules[newId] = newModule;
-		jQuery( moduleInstance.elem ).after( moduleElem );
+
+		/// Callback inserts module and then fires afterModuleRendered
+		insertIntoDOM(newModule);
 
 		dslc_generate_code();
 		dslc_show_publish_button();

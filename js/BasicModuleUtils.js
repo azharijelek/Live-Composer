@@ -344,7 +344,7 @@
 		}
 
 		/**
-		 * Functions should be always fored after module rendered
+		 * Functions should be always fired after module rendered
 		 */
 		DSLC.BasicModule.prototype.afterModuleRendered = function()
 		{

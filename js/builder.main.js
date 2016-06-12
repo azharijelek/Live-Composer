@@ -1723,24 +1723,13 @@ var dslcDebug = false;
 
 			var moduleInstanceId = jQuery(this).data('module-id');
 			var ver2module = jQuery("#dslc-module-" + moduleInstanceId).data('module-instance');
-			var moduleSettings = JSON.parse(
-			    Util.b64_to_utf8(
-					ver2module.getEncodedSettings()
-				));
+			var elem = this;
 
-			var newModule = new DSLC.ModulesManager.AvailModules[moduleSettings.module_id](moduleSettings);
+			DSLC.ModulesManager.copyModule(ver2module, function(newModule){
 
-			/// Generate new module id
-			var newId = new Date().getTime();
-			newModule.settings.module_instance_id = newId;
-
-			var moduleElem = newModule.renderModule();
-
-			DSLC.ModulesManager.ActiveModules[newId] = newModule;
-			jQuery(this).after(moduleElem);
-			jQuery(this).remove();
-
-			newModule.afterModuleRendered();
+				jQuery(elem).after(newModule.elem);
+				jQuery(elem).remove();
+			})
 		});
 
 		// Call additional functions
@@ -2137,24 +2126,12 @@ var dslcDebug = false;
 			var moduleInstanceId = jQuery(this).data('module-id');
 			var ver2module = jQuery("#dslc-module-" + moduleInstanceId).data('module-instance');
 
-			var moduleSettings = JSON.parse(
-				    Util.b64_to_utf8(
-						ver2module.getEncodedSettings()
-					));
+			var elem = this;
+			DSLC.ModulesManager.copyModule( ver2module, function(newModule){
 
-			var newModule = new DSLC.ModulesManager.AvailModules[moduleSettings.module_id](moduleSettings);
-
-			/// Generate new module id
-			var newId = new Date().getTime();
-			newModule.settings.module_instance_id = newId;
-
-			var moduleElem = newModule.renderModule();
-
-			DSLC.ModulesManager.ActiveModules[newId] = newModule;
-			jQuery(this).after(moduleElem);
-			jQuery(this).remove();
-
-			newModule.afterModuleRendered();
+				jQuery(elem).after(newModule.elem);
+				jQuery(elem).remove();
+			});
 		});
 
 		// Call other functions
@@ -4181,8 +4158,12 @@ var dslcDebug = false;
 			if(!$(this).hasClass('dslca-action-disabled')){
 
 				var module = $(this).closest('.dslc-module-front').data('module-instance');
+				var elem = this;
 
-				DSLC.ModulesManager.copyModule(module);
+				DSLC.ModulesManager.copyModule(module, function(newModule){
+
+					jQuery(module.elem).after(newModule.elem);
+				});
 			}
 		});
 
