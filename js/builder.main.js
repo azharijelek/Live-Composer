@@ -2926,7 +2926,9 @@ var dslcDebug = false;
 
 		if(jQuery('.dslca-options-filter-hook[data-section="styling"]').hasClass('dslca-active')){
 
-			if(jQuery('.dslca-module-being-edited').data('dslc-module-id') == 'DSLC_Text_Simple' || jQuery('.dslca-module-being-edited').data('dslc-module-id') == 'DSLC_TP_Content' || jQuery('.dslca-module-being-edited').data('dslc-module-id') == 'DSLC_Html'){
+			if(jQuery('.dslca-module-being-edited').data('dslc-module-id') == 'DSLC_Text_Simple' ||
+				jQuery('.dslca-module-being-edited').data('dslc-module-id') == 'DSLC_TP_Content' ||
+				jQuery('.dslca-module-being-edited').data('dslc-module-id') == 'DSLC_Html'){
 
 				var dslcCustomCSS = jQuery('.dslca-module-edit-option[data-id="css_custom"]'),
 				dslcCustomCSSVal = dslcCustomCSS.find('select').val();
@@ -3087,13 +3089,8 @@ var dslcDebug = false;
 
 	function dslc_module_options_tooltip()
 	{
-		// Close Tooltip
-		jQuery(document).on('click', '.dslca-module-edit-field-ttip-close', function(){
-			jQuery('.dslca-module-edit-field-ttip, .dslca-module-edit-field-icon-ttip').hide();
-		});
-
 		// Show Tooltip
-		jQuery(document).on('click', '.dslca-module-edit-field-ttip-hook', function(){
+		jQuery(document).on('mouseover', '.dslca-module-edit-field-ttip-hook', function(){
 
 			var dslcTtip = jQuery('.dslca-module-edit-field-ttip'),
 			dslcTtipInner = dslcTtip.find('.dslca-module-edit-field-ttip-inner'),
@@ -3119,18 +3116,23 @@ var dslcDebug = false;
 					dslcTtipLeft = 0;
 				}
 
-				jQuery('.dslca-module-edit-field-ttip').show().css({
+				jQuery("head").append(jQuery('<style>.dslca-module-edit-field-ttip:after, .dslca-module-edit-field-ttip:before{ left: ' +
+					dslcTtipArrLeft + ' }</style>'));
+
+				jQuery('.dslca-module-edit-field-ttip').css({
 					top : dslcOffset.top - dslcTtipHeight - 20,
 					left: dslcTtipLeft
-				});
-
-				jQuery("head").append(jQuery('<style>.dslca-module-edit-field-ttip:after, .dslca-module-edit-field-ttip:before{ left: ' + dslcTtipArrLeft + ' }</style>'));
+				}).show();
 			}
+		})
+		.on('mouseout', '.dslca-module-edit-field-ttip-hook', function(){
+
+			jQuery('.dslca-module-edit-field-ttip, .dslca-module-edit-field-icon-ttip').hide();
 		});
 
 		// Show Tooltip (Icon Options)
 
-		jQuery(document).on('click', '.dslca-module-edit-field-icon-ttip-hook', function(){
+		jQuery(document).on('mouseover', '.dslca-module-edit-field-icon-ttip-hook', function(){
 
 			var dslcTtip = jQuery('.dslca-module-edit-field-icon-ttip');
 			var dslcHook = jQuery(this);
@@ -3151,13 +3153,18 @@ var dslcDebug = false;
 					dslcTtipLeft = 0;
 				}
 
-				jQuery('.dslca-module-edit-field-icon-ttip').show().css({
+				jQuery("head").append(jQuery('<style>.dslca-module-edit-field-icon-ttip:after, .dslca-module-edit-field-icon-ttip:before{ left: ' + dslcTtipArrLeft + ' }</style>'));
+
+				jQuery('.dslca-module-edit-field-icon-ttip').css({
 					top : dslcOffset.top - dslcTtipHeight - 20,
 					left: dslcTtipLeft
-				});
+				}).show();
 
-				jQuery("head").append(jQuery('<style>.dslca-module-edit-field-icon-ttip:after, .dslca-module-edit-field-icon-ttip:before{ left: ' + dslcTtipArrLeft + ' }</style>'));
 			}
+		})
+		.on('mouseout', '.dslca-module-edit-field-icon-ttip-hook', function(){
+
+			jQuery('.dslca-module-edit-field-ttip, .dslca-module-edit-field-icon-ttip').hide();
 		});
 
 	}
